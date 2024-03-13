@@ -77,9 +77,17 @@ public class Cliente {
                         case 4:
                             /*Crear carpeta Remota*/
                             System.out.println("\n**CREAR CARPETA REMOTA**\n");
-                            String reference = br.readLine();
-                            System.out.println(reference+"\n");
-                            crearCarpeta(reference);
+                            System.out.println("Ingrese el nombre de la carpeta a crear:");
+                            String carpetaNueva =scanner.next();
+                            out.writeUTF(carpetaNueva);
+                            Integer respuesta = in.readInt();
+                            if (respuesta==1) {
+                                System.out.println("Se creo la nueva carpeta.");
+                            } else if (respuesta==-1) {
+                                System.out.println("No se creo la carpeta.");
+                            } else if (respuesta==0) {
+                                System.out.println("La carpeta ya existe.");
+                            }
                             break;
                         case 5:
                         /*Borrar archivo local */

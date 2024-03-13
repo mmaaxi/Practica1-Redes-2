@@ -7,6 +7,7 @@ package com.mycompany.practica1;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 import java.io.*;
 
 /**
@@ -59,7 +60,9 @@ public class Servidor {
                     break;
                 case 4:
                     // Crear Carpeta remota
-                    pw.println(folderRemoto);
+                    String reference = in.readUTF();
+                    Integer respuesta = crearCarpeta(folderRemoto, reference);
+                    out.writeInt(respuesta);
                     break;
                 case 6:
                     // Crear Carpeta remota
@@ -117,5 +120,23 @@ public class Servidor {
         }
     }
     return nombresArchivos;
-}
+    }
+
+    public static Integer crearCarpeta(String folderRemoto, String nombre){
+
+        String carpetaNueva = folderRemoto+"\\"+nombre;
+        File carpeta = new File(carpetaNueva);
+
+        // Verificar si la carpeta ya existe
+        if (!carpeta.exists()) {
+            // Intentar crear la carpeta
+            if (carpeta.mkdir()) {
+                return 1;
+            } else {
+                return -1;
+            }
+        } else {
+            return 0;
+        }
+    }
 }
