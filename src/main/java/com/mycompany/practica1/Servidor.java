@@ -65,8 +65,15 @@ public class Servidor {
                     out.writeInt(respuesta);
                     break;
                 case 6:
-                    // Crear Carpeta remota
-                    pw.println(folderRemoto);
+                    // Borrar archivo/carpeta remota
+                    List<String> listaArchivos = obtenerArchivos(folderRemoto);
+                    ObjectOutputStream archivosDisponibles = new ObjectOutputStream(server.getOutputStream());
+                    archivosDisponibles.writeObject(listaArchivos);
+                    archivosDisponibles.flush();
+
+                    String nombreArchivoABorrar = in.readUTF(); // Recibir la selección del cliente
+                    Integer res = borrarArchivoCarpeta(folderRemoto, nombreArchivoABorrar);
+                    out.writeInt(res);
                     break;
                 case 8:
                     // Modificar ruta carpeta remota
@@ -138,5 +145,16 @@ public class Servidor {
         } else {
             return 0;
         }
+    }
+
+    public static Integer borrarArchivoCarpeta(String folderRemoto, String nombre){
+        String rutaArchivo = folderRemoto+"\\"+nombre;
+        File archivo = new File(rutaArchivo);
+        if(archivo.exists()){
+            if (archivo.delete()) {
+                return 1;
+            } else {
+                return 0;
+            }}else{return -1;}
     }
 }

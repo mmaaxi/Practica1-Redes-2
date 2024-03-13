@@ -95,11 +95,27 @@ public class Cliente {
                             borrarArchivoCarpeta(LOCAL_FOLDER_PATH);
                             break;
                         case 6:
-                            /*Borrar archivos de la carpeta remota */
-                            System.out.println("\n**BORRAR ARCHIVOS/CARPETA DE LA CARPETA REMOTA\n");
-                            referenciaRemota = br.readLine();
-                            System.out.println(referenciaRemota);
-                            borrarArchivoCarpeta(referenciaRemota);
+                            System.out.println("\n** BORRAR ARCHIVOS/CARPETA DE LA CARPETA REMOTA **\n");
+                            // Mostrar lista de archivos y carpetas en la carpeta remota
+                            ObjectInputStream ois2 = new ObjectInputStream(in);
+                            List<String> archivosDisponibles = (List<String>) ois2.readObject();
+                            System.out.println("Archivos disponibles en la carpeta remota:");
+                            for (String archivo : archivosDisponibles) {
+                                System.out.println(archivo);
+                            }
+
+                            System.out.print("Introduce el nombre del archivo/carpeta a borrar: ");
+                            String archivoBorrar = scanner.next();
+                            out.writeUTF(archivoBorrar);
+
+                            int res = in.readInt();
+                            if (res == 1) {
+                                System.out.println("Se borró el archivo/carpeta.");
+                            } else if (res == -1) {
+                                System.out.println("El archivo/carpeta no existe.");
+                            } else if (res == 0) {
+                                System.out.println("No se pudo borrar el archivo/carpeta.");
+                            }
                             break;
                         case 7:
                             /*Cambiar ruta del directorio local */
