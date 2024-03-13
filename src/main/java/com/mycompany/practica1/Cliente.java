@@ -6,6 +6,7 @@ package com.mycompany.practica1;
 
 import java.net.*;
 import java.io.*;
+import java.util.List;
 import java.util.Scanner;
 import javax.swing.JFileChooser;
 
@@ -22,8 +23,8 @@ public class Cliente {
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
             BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             Scanner scanner = new Scanner(System.in);
-            String LOCAL_FOLDER_PATH = "C:\\Users\\maxar\\Desktop\\carpetaLocal";
-            //String LOCAL_FOLDER_PATH = "C:\\Users\\Max\\yo";
+            //String LOCAL_FOLDER_PATH = "C:\\Users\\maxar\\Desktop\\carpetaLocal";
+            String LOCAL_FOLDER_PATH = "C:\\Users\\Max\\yo";
             String referenciaRemota;
 
             
@@ -58,10 +59,15 @@ public class Cliente {
                             break;
                             
                         case 2:/*Mostrar carpeta remota*/
-                        System.out.println("\n**MOSTRAR CONTENIDO DE CARPETA REMOTA\n");
-                        referenciaRemota = br.readLine();
-                           System.out.println(referenciaRemota);
-                           mostrarCarpeta(referenciaRemota);
+                            System.out.println("\n**MOSTRAR CONTENIDO DE CARPETA REMOTA\n");
+                            ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+                            List<String> nombresArchivos = (List<String>) ois.readObject();
+
+                            for (String nombreArchivo : nombresArchivos) {
+                                System.out.println(nombreArchivo);
+                            }
+
+                            ois.close();
                             break;
                         case 3:
                         System.out.println("\n**CREAR CARPETA LOCAL**\n");

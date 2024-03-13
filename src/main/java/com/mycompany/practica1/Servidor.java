@@ -5,6 +5,8 @@
 package com.mycompany.practica1;
 
 import java.net.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.io.*;
 
 /**
@@ -23,8 +25,8 @@ public class Servidor {
         /*Establecemos los flujos de entrada y salida */
         DataInputStream in = new DataInputStream(server.getInputStream());
         DataOutputStream out = new DataOutputStream(server.getOutputStream());
-        String folderRemoto = "C:\\Users\\maxar\\Desktop\\carpetaRemota";
-        //String folderRemoto = "C:\\Users\\Max\\remota";
+        //String folderRemoto = "C:\\Users\\maxar\\Desktop\\carpetaRemota";
+        String folderRemoto = "C:\\Users\\Max\\remota";
         PrintWriter pw = new PrintWriter(server.getOutputStream(), true);
         
         
@@ -50,7 +52,10 @@ public class Servidor {
                     /*En esta parte el servidor manda su informacion de la carpeta remota al cliente y este la muestra */
                     /*manda la ruta de la carpeta remota */
                     
-                    pw.println(folderRemoto); 
+                    List<String> nombresArchivos = obtenerArchivos(folderRemoto);
+                    ObjectOutputStream oos = new ObjectOutputStream(server.getOutputStream());
+                    oos.writeObject(nombresArchivos);
+                    oos.flush();
                     break;
                 case 4:
                     // Crear Carpeta remota
@@ -102,5 +107,15 @@ public class Servidor {
         
     }
 
-    
+    public static List<String> obtenerArchivos(String folderLocal) {
+    List<String> nombresArchivos = new ArrayList<>();
+    File dir = new File(folderLocal); 
+    File[] files = dir.listFiles();
+    if (files != null) {
+        for (File file : files) {
+            nombresArchivos.add(file.getName());
+        }
+    }
+    return nombresArchivos;
+}
 }
