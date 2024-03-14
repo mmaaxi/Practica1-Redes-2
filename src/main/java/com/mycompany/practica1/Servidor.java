@@ -6,7 +6,9 @@ package com.mycompany.practica1;
 
 import java.net.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.io.*;
 
@@ -26,8 +28,8 @@ public class Servidor {
         /*Establecemos los flujos de entrada y salida */
         DataInputStream in = new DataInputStream(server.getInputStream());
         DataOutputStream out = new DataOutputStream(server.getOutputStream());
-        //String folderRemoto = "C:\\Users\\maxar\\Desktop\\carpetaRemota";
-        String folderRemoto = "C:\\Users\\Max\\remota";
+        String folderRemoto = "C:\\Users\\maxar\\Desktop\\carpetaRemota";
+        //String folderRemoto = "C:\\Users\\Max\\remota";
         PrintWriter pw = new PrintWriter(server.getOutputStream(), true);
         
         
@@ -53,7 +55,7 @@ public class Servidor {
                     /*En esta parte el servidor manda su informacion de la carpeta remota al cliente y este la muestra */
                     /*manda la ruta de la carpeta remota */
                     
-                    List<String> nombresArchivos = obtenerArchivos(folderRemoto);
+                    List<String> nombresArchivos = obtenerArchivos(folderRemoto,0);
                     ObjectOutputStream oos = new ObjectOutputStream(server.getOutputStream());
                     oos.writeObject(nombresArchivos);
                     oos.flush();
@@ -66,7 +68,7 @@ public class Servidor {
                     break;
                 case 6:
                     // Borrar archivo/carpeta remota
-                    List<String> listaArchivos = obtenerArchivos(folderRemoto);
+                    List<String> listaArchivos = obtenerArchivos(folderRemoto,0);
                     ObjectOutputStream archivosDisponibles = new ObjectOutputStream(server.getOutputStream());
                     archivosDisponibles.writeObject(listaArchivos);
                     archivosDisponibles.flush();
@@ -117,16 +119,32 @@ public class Servidor {
         
     }
 
-    public static List<String> obtenerArchivos(String folderLocal) {
-    List<String> nombresArchivos = new ArrayList<>();
-    File dir = new File(folderLocal); 
-    File[] files = dir.listFiles();
-    if (files != null) {
-        for (File file : files) {
-            nombresArchivos.add(file.getName());
+    public static List<String> obtenerArchivos(String folderLocal, int nivel) {
+        List<String> nombresArchivos = new ArrayList<>();
+        File dir = new File(folderLocal);
+        File[] files = dir.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    // Si es una carpeta, llamamos recursivamente a obtenerContenidoCarpeta con un nivel más profundo
+                    nombresArchivos.add(generarEspacios(nivel) + "\\" + file.getName());
+                    nombresArchivos.addAll(obtenerArchivos(file.getAbsolutePath(), nivel + 1));
+                } else {
+                    // Si es un archivo, lo agregamos a la lista
+                    nombresArchivos.add(generarEspacios(nivel) + file.getName());
+                }
+            }
         }
+        return nombresArchivos;
     }
-    return nombresArchivos;
+
+    // Método para generar espacios de indentación según el nivel
+    private static String generarEspacios(int nivel) {
+        StringBuilder espacios = new StringBuilder();
+        for (int i = 0; i < nivel; i++) {
+            espacios.append("    ");
+        }
+        return espacios.toString();
     }
 
     public static Integer crearCarpeta(String folderRemoto, String nombre){

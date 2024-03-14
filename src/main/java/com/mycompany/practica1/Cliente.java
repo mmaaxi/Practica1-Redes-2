@@ -7,6 +7,7 @@ package com.mycompany.practica1;
 import java.net.*;
 import java.io.*;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import javax.swing.JFileChooser;
 
@@ -23,9 +24,8 @@ public class Cliente {
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
             BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             Scanner scanner = new Scanner(System.in);
-            //String LOCAL_FOLDER_PATH = "C:\\Users\\maxar\\Desktop\\carpetaLocal";
-            String LOCAL_FOLDER_PATH = "C:\\Users\\Max\\yo";
-            String referenciaRemota;
+            String LOCAL_FOLDER_PATH = "C:\\Users\\maxar\\Desktop\\carpetaLocal";
+            //String LOCAL_FOLDER_PATH = "C:\\Users\\Max\\yo";
 
             
             while(true){
@@ -53,21 +53,21 @@ public class Cliente {
 
                     switch (opcion) {
                         case 1:
-                        System.out.println("**MOSTRAR CONTENIDO DE CARPETA LOCAL");
+                        System.out.println("**MOSTRAR CONTENIDO DE CARPETA LOCAL\n");
                             // Mostrar contenido de la carpeta local
-                            mostrarCarpeta(LOCAL_FOLDER_PATH);
+                            mostrarCarpeta(LOCAL_FOLDER_PATH,0);
                             break;
                             
                         case 2:/*Mostrar carpeta remota*/
                             System.out.println("\n**MOSTRAR CONTENIDO DE CARPETA REMOTA\n");
                             ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
                             List<String> nombresArchivos = (List<String>) ois.readObject();
+                            
 
+                            // Iterar sobre el contenido de la carpeta para mostrarlo
                             for (String nombreArchivo : nombresArchivos) {
                                 System.out.println(nombreArchivo);
                             }
-
-                            ois.close();
                             break;
                         case 3:
                         System.out.println("\n**CREAR CARPETA LOCAL**\n");
@@ -92,6 +92,8 @@ public class Cliente {
                         case 5:
                         /*Borrar archivo local */
                             System.out.println("\n**BORRAR ARCHIVO/CARPETA DE LA CARPETA LOCAL**\n");
+                            System.out.println("Archivos disponibles en la carpeta remota:\n");
+                            mostrarCarpeta(LOCAL_FOLDER_PATH, 0);
                             borrarArchivoCarpeta(LOCAL_FOLDER_PATH);
                             break;
                         case 6:
@@ -99,7 +101,7 @@ public class Cliente {
                             // Mostrar lista de archivos y carpetas en la carpeta remota
                             ObjectInputStream ois2 = new ObjectInputStream(in);
                             List<String> archivosDisponibles = (List<String>) ois2.readObject();
-                            System.out.println("Archivos disponibles en la carpeta remota:");
+                            System.out.println("Archivos disponibles en la carpeta remota:\n");
                             for (String archivo : archivosDisponibles) {
                                 System.out.println(archivo);
                             }
@@ -207,16 +209,27 @@ public class Cliente {
     }//main
 
 
-    public static void mostrarCarpeta(String folderLocal){
+    public static void mostrarCarpeta(String folderLocal, int nivel) {
 
-        File dir = new File(folderLocal); 
+        File dir = new File(folderLocal);
         File[] files = dir.listFiles();
         if (files != null) {
             for (File file : files) {
-                System.out.println(file.getName());
+                // Agregamos espacios de indentación según el nivel
+                for (int i = 0; i < nivel; i++) {
+                    System.out.print("    ");
+                }
+                if (file.isDirectory()) {
+                    // Si es una carpeta, llamamos recursivamente a mostrarCarpeta con un nivel más profundo
+                    System.out.println("\\" + file.getName());
+                    mostrarCarpeta(file.getAbsolutePath(), nivel + 1);
+                } else {
+                    // Si es un archivo, lo mostramos
+                    System.out.println(file.getName());
+                }
             }
         } else {
-            System.out.println("La carpeta está vacia o no existe");
+            System.out.println("La carpeta está vacía o no existe");
         }
     }
 
