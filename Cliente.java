@@ -1,7 +1,4 @@
-import java.net.*;
-import java.io.*; 
-import java.util.Scanner;
-import javax.swing.JFileChooser;
+
 
 
  import java.net.*;
@@ -262,28 +259,28 @@ import javax.swing.JFileChooser;
  
      public static void borrarArchivoCarpeta(File archivo){
  
-        
-        if (archivo.exists()) {
+            
+            if (archivo.exists()) {
 
-            if (archivo.isDirectory()) {
-        
-                File[] archivos = archivo.listFiles();
-                if (archivos != null) {
-                    for (File archivoActual : archivos) {
-                        borrarArchivoCarpeta(archivoActual);
+                if (archivo.isDirectory()) {
+            
+                    File[] archivos = archivo.listFiles();
+                    if (archivos != null) {
+                        for (File archivoActual : archivos) {
+                            borrarArchivoCarpeta(archivoActual);
+                        }
                     }
                 }
-            }
 
-            if (archivo.delete()) {
-                
-                System.out.println("Se borró el archivo/carpeta: " + archivo.getAbsolutePath());
+                if (archivo.delete()) {
+                    
+                    System.out.println("Se borró el archivo/carpeta: " + archivo.getAbsolutePath());
+                } else {
+                    System.out.println("No se borró el archivo/carpeta: " + archivo.getAbsolutePath());
+                }
             } else {
-                System.out.println("No se borró el archivo/carpeta: " + archivo.getAbsolutePath());
+                System.out.println("El archivo/carpeta no existe: " + archivo.getAbsolutePath());
             }
-        } else {
-            System.out.println("El archivo/carpeta no existe: " + archivo.getAbsolutePath());
-        }
     }
  
      public static boolean validaRuta(String nuevaRuta){

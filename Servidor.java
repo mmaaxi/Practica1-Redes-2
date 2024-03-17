@@ -55,8 +55,13 @@ public class Servidor {
                     archivosDisponibles.writeObject(listaArchivos);
                     archivosDisponibles.flush();
 
-                    String nombreArchivoABorrar = in.readUTF(); // Recibir la selección del cliente
-                    Integer res = borrarArchivoCarpeta(folderRemoto, nombreArchivoABorrar);
+                    String nombreArchivoABorrar = in.readUTF();
+                    // Recibir la selección del cliente
+
+                    String rutaArchivo = folderRemoto +"\\"+nombreArchivoABorrar;
+                    File archivoDelete = new File(rutaArchivo);
+
+                    Integer res = borrarArchivoCarpeta(archivoDelete);
                     out.writeInt(res);
                     break;
                 case 8:
@@ -147,14 +152,40 @@ public class Servidor {
         }
     }
 
-    public static Integer borrarArchivoCarpeta(String folderRemoto, String nombre){
-        String rutaArchivo = folderRemoto+"\\"+nombre;
-        File archivo = new File(rutaArchivo);
-        if(archivo.exists()){
+    public static Integer borrarArchivoCarpeta(File archivo){
+
+        int response = 0;
+      
+        if (archivo.exists()) {
+
+            if (archivo.isDirectory()) {
+        
+                File[] archivos = archivo.listFiles();
+                if (archivos != null) {
+                    for (File archivoActual : archivos) {
+                        borrarArchivoCarpeta(archivoActual);
+                    }
+                }
+            }
+
             if (archivo.delete()) {
-                return 1;
+                System.out.println("Se borró el archivo/carpeta: " + archivo.getAbsolutePath());
+                response = 1;
             } else {
-                return 0;
-            }}else{return -1;}
-    }
+                response = 0 ;
+                System.out.println("No se borró el archivo/carpeta: " + archivo.getAbsolutePath());
+            }
+        } else {
+            response = -1;
+            System.out.println("El archivo/carpeta no existe: " + archivo.getAbsolutePath());
+        }
+
+        if(response == 0)
+            return 0;
+        else if (response == 1)
+            return 1;
+        else
+            return -1;
+        
+        }
 }
