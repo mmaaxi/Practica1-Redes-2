@@ -9,7 +9,14 @@ import java.io.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.zip.ZipOutputStream;
+
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
 
 /**
  *
@@ -24,8 +31,8 @@ public class Cliente {
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
             BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             Scanner scanner = new Scanner(System.in);
-            String LOCAL_FOLDER_PATH = "C:\\Users\\maxar\\Desktop\\carpetaLocal";
-            //String LOCAL_FOLDER_PATH = "C:\\Users\\Max\\yo";
+            //String LOCAL_FOLDER_PATH = "C:\\Users\\maxar\\Desktop\\carpetaLocal";
+            String LOCAL_FOLDER_PATH = "C:\\Users\\Max\\yo";
 
             
             while(true){
@@ -147,43 +154,24 @@ public class Cliente {
                             break;
                         case 9:
                             /* Enviar archivos de la carpeta local a la remota*/
+                            enviarArchivoLR(socket, LOCAL_FOLDER_PATH);
                             break;
                         case 10:
                             /*Enviar carpetas de la carpeta local a la remota */
+                            JFileChooser jf = new JFileChooser();
+                            jf.setCurrentDirectory(new File(LOCAL_FOLDER_PATH));
+                            //jf.setMultiSelectionEnabled(true);
+                            jf.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                            int r = jf.showOpenDialog(null);
+
+                            
+                            if(r==JFileChooser.APPROVE_OPTION){
+                                File selectedFile = jf.getSelectedFile();
+                                
+                            }//if
                             break;
                         case 11:
-                            JFileChooser jf = new JFileChooser();
-                            //jf.setMultiSelectionEnabled(true);
-                            int r = jf.showOpenDialog(null);
-                            if(r==JFileChooser.APPROVE_OPTION){
-                                File f = jf.getSelectedFile();
-                                String nombre = f.getName();
-                                String path = f.getAbsolutePath();
-                                long tam = f.length();
-                                System.out.println("Preparandose pare enviar archivo "+path+" de "+tam+" bytes\n\n");
-                                DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-                                DataInputStream dis = new DataInputStream(new FileInputStream(path));
-                                dos.writeUTF(nombre);
-                                dos.flush();
-                                dos.writeLong(tam);
-                                dos.flush();
-                                long enviados = 0;
-                                int l=0,porcentaje=0;
-                                while(enviados<tam){
-                                    byte[] b = new byte[1500];
-                                    l=dis.read(b);
-                                    System.out.println("enviados: "+l);
-                                    dos.write(b,0,l);
-                                    dos.flush();
-                                    enviados = enviados + l;
-                                    porcentaje = (int)((enviados*100)/tam);
-                                    System.out.print("\rEnviado el "+porcentaje+" % del archivo");
-                                }//while
-                                System.out.println("\nArchivo enviado..");
-                                dis.close();
-                                dos.close();
-                                socket.close();
-                            }//if
+                            
                             break;
                         case 12:/*Enviar carpetas desde el local al remoto */
                         break;
@@ -285,4 +273,45 @@ public class Cliente {
     return true;
 
     }
+
+    public static void enviarArchivoLR(Socket socket, String folderLocal){
+        try {
+            JFileChooser jf = new JFileChooser();
+            //jf.setMultiSelectionEnabled(true);
+            jf.setCurrentDirectory(new File(folderLocal));
+            jf.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            int r = jf.showOpenDialog(null);
+            if(r==JFileChooser.APPROVE_OPTION){
+            File f = jf.getSelectedFile();
+            String nombre = f.getName();
+            String path = f.getAbsolutePath();
+            long tam = f.length();
+            System.out.println("Preparandose pare enviar archivo "+path+" de "+tam+" bytes\n\n");
+            DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+            DataInputStream dis = new DataInputStream(new FileInputStream(path));
+            dos.writeUTF(nombre);
+            dos.flush();
+            dos.writeLong(tam);
+            dos.flush();
+            long enviados = 0;
+            int l=0,porcentaje=0;
+            while(enviados<tam){
+                byte[] b = new byte[1500];
+                l=dis.read(b);
+                System.out.println("enviados: "+l);
+                dos.write(b,0,l);
+                dos.flush();
+                enviados = enviados + l;
+                porcentaje = (int)((enviados*100)/tam);
+                System.out.print("\rEnviado el "+porcentaje+" % del archivo\n");
+            }//while
+            System.out.println("\nArchivo enviado..");
+            
+        }//if
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    
 }

@@ -28,22 +28,10 @@ public class Servidor {
         /*Establecemos los flujos de entrada y salida */
         DataInputStream in = new DataInputStream(server.getInputStream());
         DataOutputStream out = new DataOutputStream(server.getOutputStream());
-        String folderRemoto = "C:\\Users\\maxar\\Desktop\\carpetaRemota";
-        //String folderRemoto = "C:\\Users\\Max\\remota";
+        //String folderRemoto = "C:\\Users\\maxar\\Desktop\\carpetaRemota";
+        String folderRemoto = "C:\\Users\\Max\\remota";
         PrintWriter pw = new PrintWriter(server.getOutputStream(), true);
         
-        
-        /*setReuseAddress para cuando se pierda la conexion use la misma direccion */
-          server.setReuseAddress(true);
-        //   System.out.println("Servidor iniciado esperando por archivos..");
-        //   File f = new File("");
-        //   String ruta = f.getAbsolutePath();
-        //   String carpeta="archivos";
-        //   String ruta_archivos = ruta+"\\"+carpeta+"\\";
-        //   System.out.println("ruta:"+ruta_archivos);
-        //   File f2 = new File(ruta_archivos);
-        //   f2.mkdirs();
-        //   f2.setWritable(true);
           
         while (true) {
             int opcion = in.readInt();
@@ -83,30 +71,9 @@ public class Servidor {
                     folderRemoto = nuevaRuta; // Actualizar la ruta de la carpeta remota
                     System.out.println("Ruta de carpeta remota modificada con éxito a: " + folderRemoto);
                     break;
-                case 11:
-                    // System.out.println("Cliente conectado desde "+server.getInetAddress()+":"+server.getPort());
-                    // DataInputStream dis = new DataInputStream(server.getInputStream());
-                    // String nombre = dis.readUTF();
-                    // long tam = dis.readLong();
-                    // System.out.println("Comienza descarga del archivo "+nombre+" de "+tam+" bytes\n\n");
-                    // DataOutputStream dos = new DataOutputStream(new FileOutputStream(ruta_archivos+nombre));
-                    // long recibidos=0;
-                    // int l=0, porcentaje=0;
-                    // while(recibidos<tam){
-                    //     byte[] b = new byte[1500];
-                    //     l = dis.read(b);
-                    //     System.out.println("leidos: "+l);
-                    //     dos.write(b,0,l);
-                    //     dos.flush();
-                    //     recibidos = recibidos + l;
-                    //     porcentaje = (int)((recibidos*100)/tam);
-                    //     System.out.print("\rRecibido el "+ porcentaje +" % del archivo");
-                    // }//while
-                    // System.out.println("Archivo recibido..");
-                    // dos.close();
-                    // dis.close();
-                    // server.close();
-                    // break;
+                case 9:
+                    recibirArchivoLR(server, folderRemoto);
+                    break;
                 default:
                     System.out.println("\nOpcion no valida para el servidor");
                     break;
@@ -174,5 +141,44 @@ public class Servidor {
             } else {
                 return 0;
             }}else{return -1;}
+    }
+
+    public static void recibirArchivoLR(Socket server, String folderRemoto){
+        try {
+            /*setReuseAddress para cuando se pierda la conexion use la misma direccion */
+            server.setReuseAddress(true);
+            System.out.println("Servidor iniciado esperando por archivos..");
+            File f = new File(folderRemoto);
+            String ruta = f.getAbsolutePath();
+            String carpeta="archivos";
+            String ruta_archivos = ruta+"\\"+carpeta+"\\";
+            System.out.println("ruta:"+ruta_archivos);
+            File f2 = new File(ruta_archivos);
+            f2.mkdirs();
+            f2.setWritable(true);
+
+            System.out.println("Cliente conectado desde "+server.getInetAddress()+":"+server.getPort());
+            DataInputStream dis = new DataInputStream(server.getInputStream());
+            String nombre = dis.readUTF();
+            long tam = dis.readLong();
+            System.out.println("Comienza descarga del archivo "+nombre+" de "+tam+" bytes\n\n");
+            DataOutputStream dos = new DataOutputStream(new FileOutputStream(ruta_archivos+nombre));
+            long recibidos=0;
+            int l=0, porcentaje=0;
+            while(recibidos<tam){
+                byte[] b = new byte[1500];
+                l = dis.read(b);
+                System.out.println("leidos: "+l);
+                dos.write(b,0,l);
+                dos.flush();
+                recibidos = recibidos + l;
+                porcentaje = (int)((recibidos*100)/tam);
+                System.out.print("\rRecibido el "+ porcentaje +" % del archivo");
+            }//while
+            System.out.println("Archivo recibido..");
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
