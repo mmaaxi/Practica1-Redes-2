@@ -91,11 +91,18 @@ public class Cliente {
                             }
                             break;
                         case 5:
-                        /*Borrar archivo local */
+                            /*Borrar archivo local */
                             System.out.println("\n**BORRAR ARCHIVO/CARPETA DE LA CARPETA LOCAL**\n");
-                            System.out.println("Archivos disponibles en la carpeta remota:\n");
+                            System.out.println("Archivos disponibles en la carpeta local:\n");
                             mostrarCarpeta(LOCAL_FOLDER_PATH, 0);
-                            borrarArchivoCarpeta(LOCAL_FOLDER_PATH);
+                            /*Parte para borrar el archivo */
+
+                            Scanner scannerr = new Scanner(System.in);
+                            System.out.print("Introduce el nombre del archivo/carpeta a borrar: ");
+                            String rutaArchivo = LOCAL_FOLDER_PATH+"\\"+scannerr.nextLine();
+                            File archivoDelete = new File(rutaArchivo);
+
+                            borrarArchivoCarpeta(archivoDelete);
                             break;
                         case 6:
                             System.out.println("\n** BORRAR ARCHIVOS/CARPETA DE LA CARPETA REMOTA **\n");
@@ -181,7 +188,8 @@ public class Cliente {
                             
                             break;
                         case 11:/*Enviar carpetas desde el remoto al local */
-                        break;
+
+                            break;
                         case 12:/* Salir */
                             socket.close();
                             return;
@@ -245,18 +253,25 @@ public class Cliente {
         }
     }
 
-    public static void borrarArchivoCarpeta(String folderLocal){
-        Scanner scanner = new Scanner(System.in);
-        System.out.print("Introduce el nombre del archivo/carpeta a borrar: ");
-        String rutaArchivo = folderLocal+"\\"+scanner.nextLine();
-        File archivo = new File(rutaArchivo);
-        if(archivo.exists()){
-        if (archivo.delete()) {
-            System.out.println("Se borró el/la archivo/carpeta");
+    public static void borrarArchivoCarpeta(File archivo){
+        if (archivo.exists()) {
+            if (archivo.isDirectory()) {
+                File[] archivos = archivo.listFiles();
+                if (archivos != null) {
+                    for (File archivoActual : archivos) {
+                        borrarArchivoCarpeta(archivoActual);
+                    }
+                }
+            }
+            if (archivo.delete()) {
+                System.out.println("Se borró el archivo/carpeta: " + archivo.getAbsolutePath());
+            } else {
+                System.out.println("No se borró el archivo/carpeta: " + archivo.getAbsolutePath());
+            }
         } else {
-            System.out.println("No se borró el/la archivo/carpeta");
-        }}else{System.out.println("El/La archivo/carpeta no existe");}
-    }
+            System.out.println("El archivo/carpeta no existe: " + archivo.getAbsolutePath());
+        }
+}
 
     public static boolean validaRuta(String nuevaRuta){
         File directorio = new File(nuevaRuta);

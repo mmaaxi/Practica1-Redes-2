@@ -61,8 +61,10 @@ public class Servidor {
                     archivosDisponibles.writeObject(listaArchivos);
                     archivosDisponibles.flush();
 
-                    String nombreArchivoABorrar = in.readUTF(); // Recibir la selección del cliente
-                    Integer res = borrarArchivoCarpeta(folderRemoto, nombreArchivoABorrar);
+                    String nombreArchivoABorrar = in.readUTF(); // Recibir el nombre del archivo a borrar
+                    String rutaArchivo = folderRemoto+"\\"+nombreArchivoABorrar;
+                    File archivoDelete = new File(rutaArchivo);
+                    Integer res = borrarArchivoCarpeta(archivoDelete);
                     out.writeInt(res);
                     break;
                 case 8:
@@ -72,7 +74,6 @@ public class Servidor {
                     System.out.println("Ruta de carpeta remota modificada con éxito a: " + folderRemoto);
                     break;
                 case 9:
-                case 10:
                     recibirArchivoLR(server, folderRemoto); // Para recibir archivos y carpetas
                     break;
                 case 12:
@@ -136,15 +137,24 @@ public class Servidor {
         }
     }
 
-    public static Integer borrarArchivoCarpeta(String folderRemoto, String nombre){
-        String rutaArchivo = folderRemoto+"\\"+nombre;
-        File archivo = new File(rutaArchivo);
-        if(archivo.exists()){
-            if (archivo.delete()) {
-                return 1;
+    public static Integer borrarArchivoCarpeta(File archivo){
+            if (archivo.exists()) {
+                if (archivo.isDirectory()) {
+                    File[] archivos = archivo.listFiles();
+                    if (archivos != null) {
+                        for (File archivoActual : archivos) {
+                            borrarArchivoCarpeta(archivoActual);
+                        }
+                    }
+                }
+                if (archivo.delete()) {
+                    return 1;
+                } else {
+                    return 0;
+                }
             } else {
-                return 0;
-            }}else{return -1;}
+                return -1;
+            }
     }
 
     public static void recibirArchivoLR(Socket server, String folderRemoto){
