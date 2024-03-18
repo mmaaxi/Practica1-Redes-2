@@ -52,6 +52,7 @@ public class Servidor {
                     break;
                 case 6:
                     // Borrar archivo/carpeta remota
+                    /* Escribimos en un objetos los archivo de la carpeta remota y la leemos desde el cliente */
                     List<String> listaArchivos = Metodos.obtenerArchivos(folderRemoto,0);
                     ObjectOutputStream archivosDisponibles = new ObjectOutputStream(server.getOutputStream());
                     archivosDisponibles.writeObject(listaArchivos);
@@ -84,7 +85,7 @@ public class Servidor {
                     oos3.flush();
                     
                     String nombreArchivoDescargar = in.readUTF(); // Recibir el nombre del archivo a descargar
-                    System.out.println(nombreArchivoDescargar);
+    
                     if (nombreArchivoDescargar.endsWith("0")) {
                         /* El archivo no existe */
                         break;
@@ -95,7 +96,6 @@ public class Servidor {
                         if (archivoDescargar.isDirectory()) {
                             String zipFileName = archivoDescargar.getAbsolutePath() + ".zip";
                             try {
-                                
                                 Metodos.zipDirectory(archivoDescargar, zipFileName);
                                 System.out.println("Carpeta comprimida correctamente en: " + zipFileName);
                                 File zip = new File(zipFileName);

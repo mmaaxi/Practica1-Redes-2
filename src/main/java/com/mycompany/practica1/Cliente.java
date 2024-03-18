@@ -90,11 +90,10 @@ public class Cliente {
                             /*Borrar archivo local */
                             System.out.println("\n**BORRAR ARCHIVO/CARPETA DE LA CARPETA LOCAL**\n");
                             
-
-                            JFileChooser jf = new JFileChooser();
-                            jf.setCurrentDirectory(new File(LOCAL_FOLDER_PATH));
-                            jf.setDialogTitle("Seleccionar archivo/carpeta a borrar");
-                            jf.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+                            JFileChooser jf = new JFileChooser(); // Nueva instancia
+                            jf.setCurrentDirectory(new File(LOCAL_FOLDER_PATH)); // Lanzamos la ventana en el directorio de la carpeta local
+                            jf.setDialogTitle("Seleccionar archivo/carpeta a borrar"); // Titulo de la ventana
+                            jf.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES); // Habilitamos la seleccion de archivos y carpetas
                             int r = jf.showOpenDialog(null);
 
                             if(r==JFileChooser.APPROVE_OPTION){
@@ -160,10 +159,10 @@ public class Cliente {
                             break;
                         case 9:
                             /* Enviar archivos de la carpeta local a la remota*/
-                            JFileChooser jf2 = new JFileChooser();
-                            //jf.setMultiSelectionEnabled(true);
-                            jf2.setCurrentDirectory(new File(LOCAL_FOLDER_PATH));
-                            jf2.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+                            JFileChooser jf2 = new JFileChooser(); // Nueva instancia
+                            jf2.setCurrentDirectory(new File(LOCAL_FOLDER_PATH)); // Lanzamos la ventana en el directorio de la carpeta locla
+                            jf2.setDialogTitle("Seleccionar archivo/carpeta a enviar"); // Titulo de la ventana
+                            jf2.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES); // Hanilitamos la opcion de seleciconar archivos y directorios
                             int r2 = jf2.showOpenDialog(null);
 
                             if(r2==JFileChooser.APPROVE_OPTION){
@@ -191,10 +190,10 @@ public class Cliente {
                             }
                             break;
                         case 10:/*Enviar archivos/carpetas desde el remoto al local */
+                            /* Mostramos los archivos de la carpeta remota */
                             ObjectInputStream ois3= new ObjectInputStream(socket.getInputStream());
                             List<String> nombresArchivosDescargar = (List<String>) ois3.readObject();
                             
-
                             // Iteramos sobre la lista para mostrar el contenido
                             for (String nombreArchivo : nombresArchivosDescargar) {
                                 System.out.println(nombreArchivo);
@@ -203,15 +202,21 @@ public class Cliente {
                             System.out.print("Introduce el nombre del archivo/carpeta a descargar: ");
                             String archivoDescargar = scanner.next();
         
+                            /* Buscamos que el nombre ingresado se encuentre en la lista, si no esta
+                                el directorio no existe
+                             */
                             boolean encontrado = false;
                             for (String nombreArchivo : nombresArchivosDescargar) {
 
                                 if (nombreArchivo.startsWith("\\")) {
+                                    // si inicia con \ es una carpeta y concatenamos \ a lo que el usuario
+                                    // haya ingresado
                                     if (nombreArchivo.equals("\\"+archivoDescargar)) {
                                         encontrado = true;
                                         break;
                                     }
                                 }else{
+                                    /* es un archivo normal, no es necesario concatenar nada */
                                     if (nombreArchivo.equals(archivoDescargar)) {
                                         encontrado = true;
                                         break;
@@ -221,9 +226,11 @@ public class Cliente {
                             }
 
                             if (encontrado) {
+                                /* Si esta en la lista, el archivo existe y lo recibimos */
                                 out.writeUTF(archivoDescargar);
                                 Metodos.recibirArchivoCarpeta(socket, LOCAL_FOLDER_PATH);
                             }else{
+                                /* Si no existe lanzamos un mensaje */
                                 out.writeUTF("0");
                                 System.out.println("El archivo/carpeta no existe");
                                 break;

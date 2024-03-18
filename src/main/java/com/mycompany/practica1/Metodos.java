@@ -27,7 +27,9 @@ public class Metodos {
                             /* PARA CREAR ZIP CARPETA */
 
     public static void zipDirectory(File directory, String zipFileName) throws IOException {
-        FileOutputStream fos = new FileOutputStream(zipFileName);
+        /* FLujo de salida para escribir en un archivo zip  */
+        FileOutputStream fos = new FileOutputStream(zipFileName); 
+        /* Archivo zip resultante */
         ZipOutputStream zos = new ZipOutputStream(fos);
         zip(directory, directory.getName(), zos);
         zos.close();
@@ -35,17 +37,23 @@ public class Metodos {
     }
 
     public static void zip(File directory, String baseName, ZipOutputStream zos) throws IOException {
+        /* Obtenemos la lista de archivos y las guardamos en un arreglo */
         File[] files = directory.listFiles();
+        /* Buffer para leer en los archivos */
         byte[] buffer = new byte[1024];
         int length;
         for (File file : files) {
             if (file.isDirectory()) {
+                /* Si es un directorio se llama recursivamente pero con la nueva ubicacion */
                 zip(file, baseName + "/" + file.getName(), zos);
             } else {
+                /* Se crea un flujo de entrada para leer el contenido del archivo de la iteracion actual */
                 FileInputStream fis = new FileInputStream(file);
                 ZipEntry ze = new ZipEntry(baseName + "/" + file.getName());
                 zos.putNextEntry(ze);
+                /* Lee el contenido del archivo en bloques de 1024 bytes y lo almacena en el buffer. */
                 while ((length = fis.read(buffer)) > 0) {
+                    /* escribe el contenido del buffer en el archivo zip de salida */
                     zos.write(buffer, 0, length);
                 }
                 fis.close();
@@ -119,6 +127,7 @@ public class Metodos {
     }
 
     public static String generarEspacios(int nivel) {
+        /* StringBuilder para manipular dinamicamente un string */
         StringBuilder espacios = new StringBuilder();
         for (int i = 0; i < nivel; i++) {
             espacios.append("    ");
@@ -140,13 +149,16 @@ public class Metodos {
                 return -1;
             }
         } else {
-            return 0;
+            return 0; // La carpeta ya existe
         }
     }
 
     public static Integer borrarArchivoCarpetaRemota(File archivo){
         if (archivo.exists()) {
             if (archivo.isDirectory()) {
+                /* Creamos un arreglo con los archivos de la carpeta y llamamos
+                    recursivamente a la funcion 
+                 */
                 File[] archivos = archivo.listFiles();
                 if (archivos != null) {
                     for (File archivoActual : archivos) {
@@ -168,19 +180,24 @@ public class Metodos {
 
     public static void enviarArchivoCarpeta(Socket socket, String folderLocal, File archivo){
         try {
+            /* Obtenemos los datos del arreglo */
             String nombre = archivo.getName();
             String path = archivo.getAbsolutePath();
             long tam = archivo.length();
             System.out.println("Preparándose para enviar archivo " + path + " de " + tam + " bytes\n\n");
+            /* Flujos de entrada y salida */
             DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
             DataInputStream dis = new DataInputStream(new FileInputStream(path));
+            /* Escribimos el nombre y tamaño del arreglo */
             dos.writeUTF(nombre);
             dos.flush();
             dos.writeLong(tam);
             dos.flush();
             long enviados = 0;
             int l=0,porcentaje=0;
+            /* Mientras enviados < tam significa que aun hay datos por mandar */
             while(enviados<tam){
+                /* buffer para almacenar temporalmente los datos leidos */
                 byte[] b = new byte[1500];
                 l=dis.read(b);
                 System.out.println("enviados: "+l);
@@ -205,8 +222,11 @@ public class Metodos {
             /*setReuseAddress para cuando se pierda la conexion use la misma direccion */
             server.setReuseAddress(true);
             System.out.println("Servidor iniciado esperando por archivos..");
+            /* Creamos un nuevo directorio que representa la carpeta destino*/
             File f = new File(folderRemoto);
+            /* Obtenermos los datos del archivo */
             String ruta = f.getAbsolutePath();
+            /* Creamos la carpeta donde se guardaran los archios */
             String carpeta="archivos";
             String ruta_archivos = ruta+"\\"+carpeta+"\\";
             System.out.println("ruta:"+ruta_archivos);
@@ -214,6 +234,7 @@ public class Metodos {
             f2.mkdirs();
             f2.setWritable(true);
 
+            /* Flujo de entrada para recibir los datos */
             DataInputStream dis = new DataInputStream(server.getInputStream());
             String nombre = dis.readUTF();
             long tam = dis.readLong();
@@ -221,6 +242,7 @@ public class Metodos {
             DataOutputStream dos = new DataOutputStream(new FileOutputStream(ruta_archivos+nombre));
             long recibidos=0;
             int l=0, porcentaje=0;
+            /* Mientras enviados < tam significa que aun hay datos por mandar */
             while(recibidos<tam){
                 byte[] b = new byte[1500];
                 l = dis.read(b);
@@ -233,22 +255,29 @@ public class Metodos {
             }//while
             System.out.println("Archivo recibido..");
             
-
+            /* Si es un archivo zip tenemos que descomprimirlo */
             if(nombre.endsWith(".zip")){
-
+                /* Flujo de entrada zip  para leer el archivo zip */
                 ZipInputStream zis = new ZipInputStream(new FileInputStream(ruta_archivos + nombre));
+                /* entrada para cada archio dentro del zip */
                 ZipEntry entry;
                 while ((entry = zis.getNextEntry()) != null) {
+                    /* iteramos sobre todas las entradas del zip */
                     String entryName = entry.getName();
                     File entryFile = new File(ruta_archivos + entryName);
                     if (entry.isDirectory()) {
                         entryFile.mkdirs();
                     } else {
+                        /* se crea el directorio padre del archio */
                         entryFile.getParentFile().mkdirs();
+                        /* flujo de salida para escribir los datos */
                         try (FileOutputStream fos = new FileOutputStream(entryFile)) {
+                            /* buffer para almacenar temporalmente los datos leidos */
                             byte[] buffer = new byte[1024];
                             int len;
+                            /* mientras haya datos disponibles para leer del flujo de entrada del archivo zip  */
                             while ((len = zis.read(buffer)) > 0) {
+                                /* escribe los datos leídos del archivo zip en el flujo de salida */
                                 fos.write(buffer, 0, len);
                             }
                             fos.close();
@@ -257,6 +286,7 @@ public class Metodos {
                 }
                 zis.close();
                 dos.close();
+                /* Borramos el zip despues de descomprimirlo */
                 File zip = new File(ruta_archivos + nombre);
                 zip.delete();
             }
