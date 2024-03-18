@@ -67,10 +67,10 @@ public class Cliente {
                             }
                             break;
                         case 3:
+                            /*Crear carpeta Localmente */
                             System.out.println("\n**CREAR CARPETA LOCAL**\n");
                             System.out.println("Ingrese el nombre de la carpeta a crear:");
                             String carpetaNuevaLocal = scanner.next();  
-                            /*Crear carpeta Localmente */
                             
                             /* Respuesta del servidor */
                             Integer respuestaLocal = Metodos.crearCarpeta(LOCAL_FOLDER_PATH, carpetaNuevaLocal);
@@ -102,16 +102,24 @@ public class Cliente {
                         case 5:
                             /*Borrar archivo local */
                             System.out.println("\n**BORRAR ARCHIVO/CARPETA DE LA CARPETA LOCAL**\n");
-                            System.out.println("Archivos disponibles en la carpeta local:\n");
-                            Metodos.mostrarCarpeta(LOCAL_FOLDER_PATH, 0);
-                            /*Parte para borrar el archivo */
+                            
 
-                            Scanner scannerr = new Scanner(System.in);
-                            System.out.print("Introduce el nombre del archivo/carpeta a borrar: ");
-                            String rutaArchivo = LOCAL_FOLDER_PATH+"\\"+scannerr.nextLine();
-                            File archivoDelete = new File(rutaArchivo);
+                            JFileChooser jf = new JFileChooser();
+                            jf.setCurrentDirectory(new File(LOCAL_FOLDER_PATH));
+                            jf.setDialogTitle("Seleccionar archivo/carpeta a borrar");
+                            jf.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+                            int r = jf.showOpenDialog(null);
 
-                            Metodos.borrarArchivoCarpeta(archivoDelete);
+                            if(r==JFileChooser.APPROVE_OPTION){
+                                Integer respuesta = Metodos.borrarArchivoCarpetaRemota(jf.getSelectedFile());
+                                if (respuesta==1) {
+                                    System.out.println("Se borró el archivo/carpeta: " + jf.getSelectedFile().getAbsolutePath());
+                                }else if (respuesta==0) {
+                                    System.out.println("No se borró el archivo/carpeta: " + jf.getSelectedFile().getAbsolutePath());
+                                }else{
+                                    System.out.println("El archivo/carpeta no existe: " + jf.getSelectedFile().getAbsolutePath());
+                                }
+                            }
                             break;
                         case 6:
                             System.out.println("\n** BORRAR ARCHIVOS/CARPETA DE LA CARPETA REMOTA **\n");
@@ -165,17 +173,17 @@ public class Cliente {
                             break;
                         case 9:
                             /* Enviar archivos de la carpeta local a la remota*/
-                            JFileChooser jf = new JFileChooser();
+                            JFileChooser jf2 = new JFileChooser();
                             //jf.setMultiSelectionEnabled(true);
-                            jf.setCurrentDirectory(new File(LOCAL_FOLDER_PATH));
-                            jf.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-                            int r = jf.showOpenDialog(null);
+                            jf2.setCurrentDirectory(new File(LOCAL_FOLDER_PATH));
+                            jf2.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+                            int r2 = jf2.showOpenDialog(null);
 
-                            if(r==JFileChooser.APPROVE_OPTION){
+                            if(r2==JFileChooser.APPROVE_OPTION){
 
-                                if (jf.getSelectedFile().isDirectory()) {
+                                if (jf2.getSelectedFile().isDirectory()) {
                                     /* Se selecciono una carpeta y hay que comprimirla */
-                                    File selectedFolder = jf.getSelectedFile();
+                                    File selectedFolder = jf2.getSelectedFile();
                                     String zipFileName = selectedFolder.getAbsolutePath() + ".zip";
                                     try {
                                         Metodos.zipDirectory(selectedFolder, zipFileName);
@@ -190,30 +198,48 @@ public class Cliente {
                                     }
                                 }else{
                                     /* Se selecciono un archivo y hay que enviarlo normal */
-                                    Metodos.enviarArchivoCarpeta(socket, LOCAL_FOLDER_PATH, jf.getSelectedFile());
+                                    Metodos.enviarArchivoCarpeta(socket, LOCAL_FOLDER_PATH, jf2.getSelectedFile());
                                     
                                 }
                             }
                             break;
                         case 10:/*Enviar archivos/carpetas desde el remoto al local */
                             ObjectInputStream ois3= new ObjectInputStream(socket.getInputStream());
-                            List<String> nombresArchivosBorrar = (List<String>) ois3.readObject();
+                            List<String> nombresArchivosDescargar = (List<String>) ois3.readObject();
                             
 
                             // Iteramos sobre la lista para mostrar el contenido
-                            for (String nombreArchivo : nombresArchivosBorrar) {
+                            for (String nombreArchivo : nombresArchivosDescargar) {
                                 System.out.println(nombreArchivo);
                             }
 
                             System.out.print("Introduce el nombre del archivo/carpeta a descargar: ");
                             String archivoDescargar = scanner.next();
-                            out.writeUTF(archivoDescargar);
+        
+                            boolean encontrado = false;
+                            for (String nombreArchivo : nombresArchivosDescargar) {
 
-                            int res2 = in.readInt();
-                            if (res2==-1) {
-                                System.out.println("El archivo/carpeta no existe");
-                            }else{
+                                if (nombreArchivo.startsWith("\\")) {
+                                    if (nombreArchivo.equals("\\"+archivoDescargar)) {
+                                        encontrado = true;
+                                        break;
+                                    }
+                                }else{
+                                    if (nombreArchivo.equals(archivoDescargar)) {
+                                        encontrado = true;
+                                        break;
+                                    }
+                                }
+                                
+                            }
+
+                            if (encontrado) {
+                                out.writeUTF(archivoDescargar);
                                 Metodos.recibirArchivoCarpeta(socket, LOCAL_FOLDER_PATH);
+                            }else{
+                                out.writeUTF("0");
+                                System.out.println("El archivo/carpeta no existe");
+                                break;
                             }
                             break;
                         case 11:/* Salir */
