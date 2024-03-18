@@ -70,30 +70,38 @@ public class Servidor {
                     folderRemoto = nuevaRuta; // Actualizar la ruta de la carpeta remota
                     System.out.println("Ruta de carpeta remota modificada con éxito a: " + folderRemoto);
                     break;
-                case 11:
-                    // System.out.println("Cliente conectado desde "+server.getInetAddress()+":"+server.getPort());
-                    // DataInputStream dis = new DataInputStream(server.getInputStream());
-                    // String nombre = dis.readUTF();
-                    // long tam = dis.readLong();
-                    // System.out.println("Comienza descarga del archivo "+nombre+" de "+tam+" bytes\n\n");
-                    // DataOutputStream dos = new DataOutputStream(new FileOutputStream(ruta_archivos+nombre));
-                    // long recibidos=0;
-                    // int l=0, porcentaje=0;
-                    // while(recibidos<tam){
-                    //     byte[] b = new byte[1500];
-                    //     l = dis.read(b);
-                    //     System.out.println("leidos: "+l);
-                    //     dos.write(b,0,l);
-                    //     dos.flush();
-                    //     recibidos = recibidos + l;
-                    //     porcentaje = (int)((recibidos*100)/tam);
-                    //     System.out.print("\rRecibido el "+ porcentaje +" % del archivo");
-                    // }//while
-                    // System.out.println("Archivo recibido..");
-                    // dos.close();
-                    // dis.close();
-                    // server.close();
-                    // break;
+                case 9:
+
+                // String carpeta="archivosSubidos";
+                // String ruta_archivos = folderRemoto+"\\"+carpeta+"\\";
+                // System.out.println("ruta:"+ruta_archivos);
+                // File f2 = new File(ruta_archivos);
+
+                // f2.mkdirs();
+                // f2.setWritable(true);
+                
+                    File carpeta = new File(folderRemoto);
+                    carpeta.setWritable(true);
+                    DataInputStream dis = new DataInputStream(server.getInputStream());
+                    String nombre = dis.readUTF();
+                    long tam = dis.readLong();
+                    System.out.println("Comienza descarga del archivo "+nombre+" de "+tam+" bytes\n\n");
+                    DataOutputStream dos = new DataOutputStream(new FileOutputStream(folderRemoto));
+                    long recibidos=0;
+                    int l=0, porcentaje=0;
+                    while(recibidos<tam){
+                        byte[] b = new byte[1500];
+                        l = dis.read(b);
+                        System.out.println("leidos: "+l);
+                        dos.write(b,0,l);
+                        dos.flush();
+                        recibidos = recibidos + l;
+                        porcentaje = (int)((recibidos*100)/tam);
+                        System.out.print("\rRecibido el "+ porcentaje +" % del archivo");
+                    }
+                    System.out.println("Archivo recibido..");
+                
+                    break;
                 default:
                     System.out.println("\nOpcion no valida para el servidor");
                     break;

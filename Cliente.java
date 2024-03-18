@@ -20,6 +20,8 @@
              Scanner scanner = new Scanner(System.in);
              String LOCAL_FOLDER_PATH = "C:\\Users\\maxar\\Desktop\\carpetaLocal";
              //String LOCAL_FOLDER_PATH = "C:\\Users\\Max\\yo";
+             String rutaArchivo;
+
  
              
              while(true){
@@ -86,13 +88,13 @@
                          case 5:
                          /*Borrar archivo local */
                              System.out.println("\n**BORRAR ARCHIVO/CARPETA DE LA CARPETA LOCAL**\n");
-                             System.out.println("Archivos disponibles en la carpeta remota:\n");
+                             System.out.println("Archivos disponibles en la carpeta local:\n");
                              mostrarCarpeta(LOCAL_FOLDER_PATH, 0);
                              /*Parte para borrar el archivo */
 
                              Scanner scannerr = new Scanner(System.in);
                              System.out.print("Introduce el nombre del archivo/carpeta a borrar: ");
-                             String rutaArchivo = LOCAL_FOLDER_PATH+"\\"+scannerr.nextLine();
+                             rutaArchivo = LOCAL_FOLDER_PATH+"\\"+scannerr.nextLine();
                              File archivoDelete = new File(rutaArchivo);
 
                              borrarArchivoCarpeta(archivoDelete);
@@ -149,43 +151,21 @@
                              break;
                          case 9:
                              /* Enviar archivos de la carpeta local a la remota*/
+                             System.out.println("\n**SUBIR ARCHIVO/CARPETA A SERVIDOR**\n");
+                             System.out.println("Archivos disponibles en la carpeta local:\n");
+                             mostrarCarpeta(LOCAL_FOLDER_PATH, 0);
+                             /*Parte para borrar el archivo */
+
+                             Scanner scannerrr = new Scanner(System.in);
+                             System.out.print("Introduce el nombre del archivo/carpeta a subir al servidor: ");
+                             rutaArchivo = LOCAL_FOLDER_PATH+"\\"+scannerrr.nextLine();
+                             enviarCarpeta(socket, rutaArchivo);
+
                              break;
                          case 10:
-                             /*Enviar carpetas de la carpeta local a la remota */
+                         System.out.println("\n**DESCARGAR ARCHIVO/CARPETA DESDE SERVIDOR**\n");
                              break;
                          case 11:
-                             JFileChooser jf = new JFileChooser();
-                             //jf.setMultiSelectionEnabled(true);
-                             int r = jf.showOpenDialog(null);
-                             if(r==JFileChooser.APPROVE_OPTION){
-                                 File f = jf.getSelectedFile();
-                                 String nombre = f.getName();
-                                 String path = f.getAbsolutePath();
-                                 long tam = f.length();
-                                 System.out.println("Preparandose pare enviar archivo "+path+" de "+tam+" bytes\n\n");
-                                 DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-                                 DataInputStream dis = new DataInputStream(new FileInputStream(path));
-                                 dos.writeUTF(nombre);
-                                 dos.flush();
-                                 dos.writeLong(tam);
-                                 dos.flush();
-                                 long enviados = 0;
-                                 int l=0,porcentaje=0;
-                                 while(enviados<tam){
-                                     byte[] b = new byte[1500];
-                                     l=dis.read(b);
-                                     System.out.println("enviados: "+l);
-                                     dos.write(b,0,l);
-                                     dos.flush();
-                                     enviados = enviados + l;
-                                     porcentaje = (int)((enviados*100)/tam);
-                                     System.out.print("\rEnviado el "+porcentaje+" % del archivo");
-                                 }//while
-                                 System.out.println("\nArchivo enviado..");
-                                 dis.close();
-                                 dos.close();
-                                 socket.close();
-                             }//if
                              break;
                          case 12:/*Enviar carpetas desde el local al remoto */
                          break;
@@ -300,4 +280,55 @@
      return true;
  
      }
- }
+
+     public static void enviarCarpeta(Socket socket, String rutaCarpeta) {
+        File carpeta = new File(rutaCarpeta);
+        //enviarArchivoIndividual(carpeta, socket);
+
+        File[] archivos = carpeta.listFiles();
+
+        if (archivos != null) {
+            for (File archivo : archivos) {
+                if (archivo.isDirectory()) {
+                    enviarCarpeta(socket, archivo.getAbsolutePath()); // Llamada recursiva para enviar subcarpetas
+                } else {
+                    enviarArchivoIndividual(archivo, socket); // Enviar archivo individual
+                }
+            }
+        }
+    }
+
+     
+     public static void enviarArchivoIndividual(File archivo, Socket socket){
+        try{
+        DataOutputStream subirStream = new DataOutputStream(socket.getOutputStream());
+        FileInputStream leerStream = new FileInputStream(archivo);
+
+        /*Envio de metadatos */
+        subirStream.writeUTF(archivo.getAbsolutePath()); 
+        subirStream.flush();
+        subirStream.writeUTF(archivo.getName()); 
+        subirStream.flush();
+        subirStream.writeLong(archivo.length()); 
+        subirStream.flush();
+
+        byte[] buffer = new byte[1500];
+            int bytesRead;
+            long enviados = 0;
+            /*-1 significa que ya no hay datos */
+            while (enviados<archivo.length()) {
+                bytesRead = leerStream.read(buffer);
+                subirStream.write(buffer, 0, bytesRead); // Enviar datos del archivo al servidor
+                subirStream.flush();
+                enviados += bytesRead;
+                int porcentaje = (int) ((enviados * 100) / archivo.length());
+                System.out.print("\rEnviado el " + porcentaje + " % del archivo\n");
+            }
+            System.out.println("\nArchivo enviado: " + archivo.getAbsolutePath());
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+
+     }
+    }
