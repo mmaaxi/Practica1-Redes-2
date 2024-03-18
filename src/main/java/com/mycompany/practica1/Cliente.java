@@ -73,14 +73,8 @@ public class Cliente {
                             String carpetaNuevaLocal = scanner.next();  
                             
                             /* Respuesta del servidor */
-                            Integer respuestaLocal = Metodos.crearCarpeta(LOCAL_FOLDER_PATH, carpetaNuevaLocal);
-                            if (respuestaLocal==1) {
-                                System.out.println("Se creo la nueva carpeta.");
-                            } else if (respuestaLocal==-1) {
-                                System.out.println("No se creo la carpeta.");
-                            } else if (respuestaLocal==0) {
-                                System.out.println("La carpeta ya existe.");
-                            }
+                            Metodos.respuestaServidor(Metodos.crearCarpeta(LOCAL_FOLDER_PATH, carpetaNuevaLocal));
+                            
                             break;
                         case 4:
                             /*Crear carpeta Remota*/
@@ -90,14 +84,7 @@ public class Cliente {
                             out.writeUTF(carpetaNuevaRemota);
 
                             /* Respuesta del servidor */
-                            Integer respuestaRemota = in.readInt();
-                            if (respuestaRemota==1) {
-                                System.out.println("Se creo la nueva carpeta.");
-                            } else if (respuestaRemota==-1) {
-                                System.out.println("No se creo la carpeta.");
-                            } else if (respuestaRemota==0) {
-                                System.out.println("La carpeta ya existe.");
-                            }
+                            Metodos.respuestaServidor(in.readInt());
                             break;
                         case 5:
                             /*Borrar archivo local */

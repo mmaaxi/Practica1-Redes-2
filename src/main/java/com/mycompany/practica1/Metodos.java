@@ -14,6 +14,16 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 public class Metodos {
+
+    public static void respuestaServidor(Integer a){
+        if (a==1) {
+            System.out.println("Se creo la nueva carpeta.");
+        } else if (a==-1) {
+            System.out.println("No se creo la carpeta.");
+        } else if (a==0) {
+            System.out.println("La carpeta ya existe.");
+        }
+    }
                             /* PARA CREAR ZIP CARPETA */
 
     public static void zipDirectory(File directory, String zipFileName) throws IOException {
