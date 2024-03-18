@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.io.*;
+import com.mycompany.practica1.*;
 
 /**
  *
@@ -76,6 +77,43 @@ public class Servidor {
                 case 9:
                     recibirArchivoLR(server, folderRemoto); // Para recibir archivos y carpetas
                     break;
+                case 10:
+                    // Listar contenido de carpeta remota 
+                    /*En esta parte el servidor manda su informacion de la carpeta remota al cliente y este la muestra */
+                    /*manda la ruta de la carpeta remota */
+                    
+                    List<String> nombresArchivosDescargar = obtenerArchivos(folderRemoto,0);
+                    ObjectOutputStream oos3 = new ObjectOutputStream(server.getOutputStream());
+                    oos3.writeObject(nombresArchivosDescargar);
+                    oos3.flush();
+                    
+                    String nombreArchivoDescargar = in.readUTF(); // Recibir el nombre del archivo a descargar
+                    String rutaArchivoDescargar = folderRemoto+"\\"+nombreArchivoDescargar;
+                    File archivoDescargar = new File(rutaArchivoDescargar);
+
+                    if (archivoDescargar.exists()) {
+                        if (archivoDescargar.isDirectory()) {
+                            String zipFileName = archivoDescargar.getAbsolutePath() + ".zip";
+                            try {
+                                
+                                Metodos.zipDirectory(archivoDescargar, zipFileName);
+                                System.out.println("Carpeta comprimida correctamente en: " + zipFileName);
+                                File zip = new File(zipFileName);
+                                
+                                enviarArchivoRL(server, folderRemoto, zip);
+                                zip.delete();
+                                
+                            } catch (IOException ex) {
+                                ex.printStackTrace();
+                            }
+                        }else{
+                            enviarArchivoRL(server, rutaArchivoDescargar, archivoDescargar);
+                        }
+                    } else{
+                        out.writeInt(-1);
+                    }
+                
+                    break;
                 case 12:
                     server.close();
                     return;
@@ -111,7 +149,7 @@ public class Servidor {
     }
 
     // Método para generar espacios de indentación según el nivel
-    private static String generarEspacios(int nivel) {
+    public static String generarEspacios(int nivel) {
         StringBuilder espacios = new StringBuilder();
         for (int i = 0; i < nivel; i++) {
             espacios.append("    ");
@@ -225,4 +263,37 @@ public class Servidor {
         }
     }
 
+    public static void enviarArchivoRL(Socket socket, String folderLocal, File archivo){
+        try {
+            String nombre = archivo.getName();
+            String path = archivo.getAbsolutePath();
+            long tam = archivo.length();
+            System.out.println("Preparándose para enviar archivo " + path + " de " + tam + " bytes\n\n");
+            DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+            DataInputStream dis = new DataInputStream(new FileInputStream(path));
+            dos.writeUTF(nombre);
+            dos.flush();
+            dos.writeLong(tam);
+            dos.flush();
+            long enviados = 0;
+            int l=0,porcentaje=0;
+            while(enviados<tam){
+                byte[] b = new byte[1500];
+                l=dis.read(b);
+                System.out.println("enviados: "+l);
+                dos.write(b,0,l);
+
+                enviados = enviados + l;
+                porcentaje = (int)((enviados*100)/tam);
+                System.out.print("\rEnviado el "+porcentaje+" % del archivo\n");
+            }//while
+            System.out.println("\nArchivo enviado..");
+
+            dis.close();
+            
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

@@ -11,6 +11,8 @@ import java.util.Scanner;
 import java.util.zip.ZipOutputStream;
 import javax.swing.JFileChooser;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import com.mycompany.practica1.Metodos;
 
 /**
  *
@@ -40,13 +42,12 @@ public class Cliente {
                     System.out.println("6. Borrar archivos/carpeta de la carpeta remota");
                     System.out.println("7. Cambiar ruta del directorio local");
                     System.out.println("8. Cambiar ruta del directorio remoto");
-                    System.out.println("9. Enviar archivos/carpetas desde la carpeta local hacia la remota");
+                    System.out.println("9. Enviar archivos/carpeta desde la carpeta local hacia la remota");
 
                     /*En esta parte del codigo tendremos que recibir los archivos del servidor al cliente */
-                    System.out.println("10. Enviar archivos desde la carpeta remota hacia la local");
-                    System.out.println("11. Enviar carpetas desde la carpeta remota hacia la local");  
+                    System.out.println("10. Enviar archivos/carpeta desde la carpeta remota hacia la local");  
                     
-                    System.out.println("12. Salir");
+                    System.out.println("11. Salir");
                     System.out.println("Ingresa una opcion:\n");
                     /*Se mapea la opcion para el servidor */
                     int opcion = scanner.nextInt();
@@ -65,7 +66,7 @@ public class Cliente {
                             List<String> nombresArchivos = (List<String>) ois.readObject();
                             
 
-                            // Iterar sobre el contenido de la carpeta para mostrarlo
+                            // Iteramos sobre la lista para mostrar el contenido
                             for (String nombreArchivo : nombresArchivos) {
                                 System.out.println(nombreArchivo);
                             }
@@ -168,7 +169,7 @@ public class Cliente {
                                     File selectedFolder = jf.getSelectedFile();
                                     String zipFileName = selectedFolder.getAbsolutePath() + ".zip";
                                     try {
-                                        zipDirectory(selectedFolder, zipFileName);
+                                        Metodos.zipDirectory(selectedFolder, zipFileName);
                                         System.out.println("Carpeta comprimida correctamente en: " + zipFileName);
                                         File zip = new File(zipFileName);
                                         
@@ -184,13 +185,28 @@ public class Cliente {
                                 }
                             }
                             break;
-                        case 10:/*Enviar archivos desde el remoto al local */
+                        case 10:/*Enviar archivos/carpetas desde el remoto al local */
+                            ObjectInputStream ois3= new ObjectInputStream(socket.getInputStream());
+                            List<String> nombresArchivosBorrar = (List<String>) ois3.readObject();
                             
-                            break;
-                        case 11:/*Enviar carpetas desde el remoto al local */
 
+                            // Iteramos sobre la lista para mostrar el contenido
+                            for (String nombreArchivo : nombresArchivosBorrar) {
+                                System.out.println(nombreArchivo);
+                            }
+
+                            System.out.print("Introduce el nombre del archivo/carpeta a descargar: ");
+                            String archivoDescargar = scanner.next();
+                            out.writeUTF(archivoDescargar);
+
+                            int res2 = in.readInt();
+                            if (res2==-1) {
+                                System.out.println("El archivo/carpeta no existe");
+                            }else{
+                                recibirArchivoRL(socket, LOCAL_FOLDER_PATH);
+                            }
                             break;
-                        case 12:/* Salir */
+                        case 11:/* Salir */
                             socket.close();
                             return;
                         default:
@@ -325,30 +341,72 @@ public class Cliente {
         }
     }
 
-    public static void zipDirectory(File directory, String zipFileName) throws IOException {
-        FileOutputStream fos = new FileOutputStream(zipFileName);
-        ZipOutputStream zos = new ZipOutputStream(fos);
-        zip(directory, directory.getName(), zos);
-        zos.close();
-        fos.close();
-    }
+    
 
-    private static void zip(File directory, String baseName, ZipOutputStream zos) throws IOException {
-        File[] files = directory.listFiles();
-        byte[] buffer = new byte[1024];
-        int length;
-        for (File file : files) {
-            if (file.isDirectory()) {
-                zip(file, baseName + "/" + file.getName(), zos);
-            } else {
-                FileInputStream fis = new FileInputStream(file);
-                ZipEntry ze = new ZipEntry(baseName + "/" + file.getName());
-                zos.putNextEntry(ze);
-                while ((length = fis.read(buffer)) > 0) {
-                    zos.write(buffer, 0, length);
+    public static void recibirArchivoRL(Socket server, String folderRemoto){
+        try {
+            /*setReuseAddress para cuando se pierda la conexion use la misma direccion */
+            server.setReuseAddress(true);
+            File f = new File(folderRemoto);
+            String ruta = f.getAbsolutePath();
+            String carpeta="archivos";
+            String ruta_archivos = ruta+"\\"+carpeta+"\\";
+            System.out.println("ruta:"+ruta_archivos);
+            File f2 = new File(ruta_archivos);
+            f2.mkdirs();
+            f2.setWritable(true);
+
+            System.out.println("Cliente conectado desde "+server.getInetAddress()+":"+server.getPort());
+            DataInputStream dis = new DataInputStream(server.getInputStream());
+            String nombre = dis.readUTF();
+            long tam = dis.readLong();
+            System.out.println("Comienza descarga del archivo "+nombre+" de "+tam+" bytes\n\n");
+            DataOutputStream dos = new DataOutputStream(new FileOutputStream(ruta_archivos+nombre));
+            long recibidos=0;
+            int l=0, porcentaje=0;
+            while(recibidos<tam){
+                byte[] b = new byte[1500];
+                l = dis.read(b);
+                System.out.println("leidos: "+l);
+                dos.write(b,0,l);
+                dos.flush();
+                recibidos = recibidos + l;
+                porcentaje = (int)((recibidos*100)/tam);
+                System.out.print("\rRecibido el "+ porcentaje +" % del archivo ");
+            }//while
+            System.out.println("Archivo recibido..");
+            
+
+            if(nombre.endsWith(".zip")){
+                System.out.println("Extrayendo zip...");
+
+                ZipInputStream zis = new ZipInputStream(new FileInputStream(ruta_archivos + nombre));
+                ZipEntry entry;
+                while ((entry = zis.getNextEntry()) != null) {
+                    String entryName = entry.getName();
+                    File entryFile = new File(ruta_archivos + entryName);
+                    if (entry.isDirectory()) {
+                        entryFile.mkdirs();
+                    } else {
+                        entryFile.getParentFile().mkdirs();
+                        try (FileOutputStream fos = new FileOutputStream(entryFile)) {
+                            byte[] buffer = new byte[1024];
+                            int len;
+                            while ((len = zis.read(buffer)) > 0) {
+                                fos.write(buffer, 0, len);
+                            }
+                            fos.close();
+                        }
+                    }
                 }
-                fis.close();
+                zis.close();
+                dos.close();
+                File zip = new File(ruta_archivos + nombre);
+                zip.delete();
             }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
