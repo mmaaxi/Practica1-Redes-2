@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -68,26 +67,6 @@ public class Metodos {
         } else {
             System.out.println("La carpeta está vacía o no existe");
         }
-    }
-
-    public static void crearCarpeta(String folderLocal){
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Ingrese el nombre de la carpeta a crear:");
-        String carpetaNueva = folderLocal+"\\"+scanner.next();        
-        File carpeta = new File(carpetaNueva);
-
-        // Verificar si la carpeta ya existe
-        if (!carpeta.exists()) {
-            // Intentar crear la carpeta
-            if (carpeta.mkdir()) {
-                System.out.println("Se creo la nueva carpeta.");
-            } else {
-                System.out.println("No se creo la carpeta.");
-            }
-        } else {
-            System.out.println("La carpeta ya existe.");
-        }
-        
     }
 
     public static void borrarArchivoCarpeta(File archivo){

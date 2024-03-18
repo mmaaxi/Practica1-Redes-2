@@ -67,22 +67,35 @@ public class Cliente {
                             }
                             break;
                         case 3:
-                        System.out.println("\n**CREAR CARPETA LOCAL**\n");
+                            System.out.println("\n**CREAR CARPETA LOCAL**\n");
+                            System.out.println("Ingrese el nombre de la carpeta a crear:");
+                            String carpetaNuevaLocal = scanner.next();  
                             /*Crear carpeta Localmente */
-                            Metodos.crearCarpeta(LOCAL_FOLDER_PATH);
+                            
+                            /* Respuesta del servidor */
+                            Integer respuestaLocal = Metodos.crearCarpeta(LOCAL_FOLDER_PATH, carpetaNuevaLocal);
+                            if (respuestaLocal==1) {
+                                System.out.println("Se creo la nueva carpeta.");
+                            } else if (respuestaLocal==-1) {
+                                System.out.println("No se creo la carpeta.");
+                            } else if (respuestaLocal==0) {
+                                System.out.println("La carpeta ya existe.");
+                            }
                             break;
                         case 4:
                             /*Crear carpeta Remota*/
                             System.out.println("\n**CREAR CARPETA REMOTA**\n");
                             System.out.println("Ingrese el nombre de la carpeta a crear:");
-                            String carpetaNueva =scanner.next();
-                            out.writeUTF(carpetaNueva);
-                            Integer respuesta = in.readInt();
-                            if (respuesta==1) {
+                            String carpetaNuevaRemota =scanner.next();
+                            out.writeUTF(carpetaNuevaRemota);
+
+                            /* Respuesta del servidor */
+                            Integer respuestaRemota = in.readInt();
+                            if (respuestaRemota==1) {
                                 System.out.println("Se creo la nueva carpeta.");
-                            } else if (respuesta==-1) {
+                            } else if (respuestaRemota==-1) {
                                 System.out.println("No se creo la carpeta.");
-                            } else if (respuesta==0) {
+                            } else if (respuestaRemota==0) {
                                 System.out.println("La carpeta ya existe.");
                             }
                             break;
@@ -114,6 +127,7 @@ public class Cliente {
                             String archivoBorrar = scanner.next();
                             out.writeUTF(archivoBorrar);
 
+                            /* Respuesta del serviodor */
                             int res = in.readInt();
                             if (res == 1) {
                                 System.out.println("Se borró el archivo/carpeta.");
