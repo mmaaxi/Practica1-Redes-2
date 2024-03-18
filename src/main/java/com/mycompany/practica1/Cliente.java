@@ -154,21 +154,41 @@ public class Cliente {
                             break;
                         case 9:
                             /* Enviar archivos de la carpeta local a la remota*/
-                            enviarArchivoLR(socket, LOCAL_FOLDER_PATH);
+                            JFileChooser jf = new JFileChooser();
+                            //jf.setMultiSelectionEnabled(true);
+                            jf.setCurrentDirectory(new File(LOCAL_FOLDER_PATH));
+                            jf.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                            int r = jf.showOpenDialog(null);
+                            if(r==JFileChooser.APPROVE_OPTION){
+                                enviarArchivoLR(socket, LOCAL_FOLDER_PATH, jf.getSelectedFile());
+                            }
                             break;
                         case 10:
                             /*Enviar carpetas de la carpeta local a la remota */
-                            JFileChooser jf = new JFileChooser();
-                            jf.setCurrentDirectory(new File(LOCAL_FOLDER_PATH));
+                            JFileChooser jf2 = new JFileChooser();
+                            jf2.setCurrentDirectory(new File(LOCAL_FOLDER_PATH));
                             //jf.setMultiSelectionEnabled(true);
-                            jf.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-                            int r = jf.showOpenDialog(null);
+                            jf2.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                            int r2 = jf2.showOpenDialog(null);
 
                             
-                            if(r==JFileChooser.APPROVE_OPTION){
-                                File selectedFile = jf.getSelectedFile();
+                            if (r2 == JFileChooser.APPROVE_OPTION) {
+                                File selectedFolder = jf2.getSelectedFile();
+                                String zipFileName = selectedFolder.getAbsolutePath() + ".zip";
+                                try {
+                                    zipDirectory(selectedFolder, zipFileName);
+                                    System.out.println("Carpeta comprimida correctamente en: " + zipFileName);
+                                    File zip = new File(zipFileName);
+                                    
+                                    enviarArchivoLR(socket, LOCAL_FOLDER_PATH, zip);
+                                    zip.delete();
+                                    
+                                } catch (IOException ex) {
+                                    ex.printStackTrace();
+                                }
                                 
-                            }//if
+                            }
+
                             break;
                         case 11:
                             
@@ -274,19 +294,12 @@ public class Cliente {
 
     }
 
-    public static void enviarArchivoLR(Socket socket, String folderLocal){
+    public static void enviarArchivoLR(Socket socket, String folderLocal, File archivo){
         try {
-            JFileChooser jf = new JFileChooser();
-            //jf.setMultiSelectionEnabled(true);
-            jf.setCurrentDirectory(new File(folderLocal));
-            jf.setFileSelectionMode(JFileChooser.FILES_ONLY);
-            int r = jf.showOpenDialog(null);
-            if(r==JFileChooser.APPROVE_OPTION){
-            File f = jf.getSelectedFile();
-            String nombre = f.getName();
-            String path = f.getAbsolutePath();
-            long tam = f.length();
-            System.out.println("Preparandose pare enviar archivo "+path+" de "+tam+" bytes\n\n");
+            String nombre = archivo.getName();
+            String path = archivo.getAbsolutePath();
+            long tam = archivo.length();
+            System.out.println("Preparándose para enviar archivo " + path + " de " + tam + " bytes\n\n");
             DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
             DataInputStream dis = new DataInputStream(new FileInputStream(path));
             dos.writeUTF(nombre);
@@ -300,18 +313,45 @@ public class Cliente {
                 l=dis.read(b);
                 System.out.println("enviados: "+l);
                 dos.write(b,0,l);
-                dos.flush();
+
                 enviados = enviados + l;
                 porcentaje = (int)((enviados*100)/tam);
                 System.out.print("\rEnviado el "+porcentaje+" % del archivo\n");
             }//while
             System.out.println("\nArchivo enviado..");
+
+            dis.close();
             
-        }//if
+
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    
+    public static void zipDirectory(File directory, String zipFileName) throws IOException {
+        FileOutputStream fos = new FileOutputStream(zipFileName);
+        ZipOutputStream zos = new ZipOutputStream(fos);
+        zip(directory, directory.getName(), zos);
+        zos.close();
+        fos.close();
+    }
+
+    private static void zip(File directory, String baseName, ZipOutputStream zos) throws IOException {
+        File[] files = directory.listFiles();
+        byte[] buffer = new byte[1024];
+        int length;
+        for (File file : files) {
+            if (file.isDirectory()) {
+                zip(file, baseName + "/" + file.getName(), zos);
+            } else {
+                FileInputStream fis = new FileInputStream(file);
+                ZipEntry ze = new ZipEntry(baseName + "/" + file.getName());
+                zos.putNextEntry(ze);
+                while ((length = fis.read(buffer)) > 0) {
+                    zos.write(buffer, 0, length);
+                }
+                fis.close();
+            }
+        }
+    }
 }

@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.io.*;
 
 /**
@@ -74,6 +76,8 @@ public class Servidor {
                 case 9:
                     recibirArchivoLR(server, folderRemoto);
                     break;
+                case 10:
+                    recibirArchivoLR(server, folderRemoto);
                 default:
                     System.out.println("\nOpcion no valida para el servidor");
                     break;
@@ -173,12 +177,42 @@ public class Servidor {
                 dos.flush();
                 recibidos = recibidos + l;
                 porcentaje = (int)((recibidos*100)/tam);
-                System.out.print("\rRecibido el "+ porcentaje +" % del archivo");
+                System.out.print("\rRecibido el "+ porcentaje +" % del archivo ");
             }//while
             System.out.println("Archivo recibido..");
+            
+
+            if(nombre.endsWith(".zip")){
+                System.out.println("Extrayendo zip...");
+
+                ZipInputStream zis = new ZipInputStream(new FileInputStream(ruta_archivos + nombre));
+                ZipEntry entry;
+                while ((entry = zis.getNextEntry()) != null) {
+                    String entryName = entry.getName();
+                    File entryFile = new File(ruta_archivos + entryName);
+                    if (entry.isDirectory()) {
+                        entryFile.mkdirs();
+                    } else {
+                        entryFile.getParentFile().mkdirs();
+                        try (FileOutputStream fos = new FileOutputStream(entryFile)) {
+                            byte[] buffer = new byte[1024];
+                            int len;
+                            while ((len = zis.read(buffer)) > 0) {
+                                fos.write(buffer, 0, len);
+                            }
+                            fos.close();
+                        }
+                    }
+                }
+                zis.close();
+                dos.close();
+                File zip = new File(ruta_archivos + nombre);
+                zip.delete();
+            }
             
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
 }
