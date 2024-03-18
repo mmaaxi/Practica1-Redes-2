@@ -6,10 +6,7 @@ package com.mycompany.practica1;
 
 import java.net.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.io.*;
@@ -31,10 +28,11 @@ public class Servidor {
         DataInputStream in = new DataInputStream(server.getInputStream());
         DataOutputStream out = new DataOutputStream(server.getOutputStream());
         //String folderRemoto = "C:\\Users\\maxar\\Desktop\\carpetaRemota";
-        String folderRemoto = "C:\\Users\\Max\\remota";
+        //String folderRemoto = "C:\\Users\\Max\\remota";
+        String folderRemoto = "C:\\Users\\mreye\\Downloads\\Redes\\Remota";
         PrintWriter pw = new PrintWriter(server.getOutputStream(), true);
         
-          
+        
         while (true) {
             int opcion = in.readInt();
             System.out.println("Opcion recibida por el servidor:"+opcion);
@@ -74,10 +72,12 @@ public class Servidor {
                     System.out.println("Ruta de carpeta remota modificada con éxito a: " + folderRemoto);
                     break;
                 case 9:
-                    recibirArchivoLR(server, folderRemoto);
-                    break;
                 case 10:
-                    recibirArchivoLR(server, folderRemoto);
+                    recibirArchivoLR(server, folderRemoto); // Para recibir archivos y carpetas
+                    break;
+                case 12:
+                    server.close();
+                    return;
                 default:
                     System.out.println("\nOpcion no valida para el servidor");
                     break;

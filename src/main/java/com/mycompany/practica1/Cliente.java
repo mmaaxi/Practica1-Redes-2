@@ -7,16 +7,10 @@ package com.mycompany.practica1;
 import java.net.*;
 import java.io.*;
 import java.util.List;
-import java.util.Map;
 import java.util.Scanner;
 import java.util.zip.ZipOutputStream;
-
 import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
-
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
-import java.util.zip.ZipFile;
 
 /**
  *
@@ -32,7 +26,8 @@ public class Cliente {
             BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             Scanner scanner = new Scanner(System.in);
             //String LOCAL_FOLDER_PATH = "C:\\Users\\maxar\\Desktop\\carpetaLocal";
-            String LOCAL_FOLDER_PATH = "C:\\Users\\Max\\yo";
+            //String LOCAL_FOLDER_PATH = "C:\\Users\\Max\\yo";
+            String LOCAL_FOLDER_PATH = "C:\\Users\\mreye\\Downloads\\Redes\\Local";
 
             
             while(true){
@@ -45,14 +40,13 @@ public class Cliente {
                     System.out.println("6. Borrar archivos/carpeta de la carpeta remota");
                     System.out.println("7. Cambiar ruta del directorio local");
                     System.out.println("8. Cambiar ruta del directorio remoto");
-                    System.out.println("9. Enviar archivos desde la carpeta local hacia la remota");
-                    System.out.println("10. Enviar carpetas desde la carpeta local hacia la remota");
+                    System.out.println("9. Enviar archivos/carpetas desde la carpeta local hacia la remota");
 
                     /*En esta parte del codigo tendremos que recibir los archivos del servidor al cliente */
-                    System.out.println("11. Enviar archivos desde la carpeta remota hacia la local");
-                    System.out.println("12. Enviar carpetas desde la carpeta remota hacia la local");  
+                    System.out.println("10. Enviar archivos desde la carpeta remota hacia la local");
+                    System.out.println("11. Enviar carpetas desde la carpeta remota hacia la local");  
                     
-                    System.out.println("13. Salir");
+                    System.out.println("12. Salir");
                     System.out.println("Ingresa una opcion:\n");
                     /*Se mapea la opcion para el servidor */
                     int opcion = scanner.nextInt();
@@ -157,50 +151,38 @@ public class Cliente {
                             JFileChooser jf = new JFileChooser();
                             //jf.setMultiSelectionEnabled(true);
                             jf.setCurrentDirectory(new File(LOCAL_FOLDER_PATH));
-                            jf.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                            jf.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
                             int r = jf.showOpenDialog(null);
+
                             if(r==JFileChooser.APPROVE_OPTION){
-                                enviarArchivoLR(socket, LOCAL_FOLDER_PATH, jf.getSelectedFile());
-                            }
-                            break;
-                        case 10:
-                            /*Enviar carpetas de la carpeta local a la remota */
-                            JFileChooser jf2 = new JFileChooser();
-                            jf2.setCurrentDirectory(new File(LOCAL_FOLDER_PATH));
-                            //jf.setMultiSelectionEnabled(true);
-                            jf2.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-                            int r2 = jf2.showOpenDialog(null);
 
-                            
-                            if (r2 == JFileChooser.APPROVE_OPTION) {
-                                File selectedFolder = jf2.getSelectedFile();
-                                String zipFileName = selectedFolder.getAbsolutePath() + ".zip";
-                                try {
-                                    zipDirectory(selectedFolder, zipFileName);
-                                    System.out.println("Carpeta comprimida correctamente en: " + zipFileName);
-                                    File zip = new File(zipFileName);
-                                    
-                                    enviarArchivoLR(socket, LOCAL_FOLDER_PATH, zip);
-                                    zip.delete();
-                                    
-                                } catch (IOException ex) {
-                                    ex.printStackTrace();
+                                if (jf.getSelectedFile().isDirectory()) {
+                                    /* Se selecciono una carpeta y hay que comprimirla */
+                                    File selectedFolder = jf.getSelectedFile();
+                                    String zipFileName = selectedFolder.getAbsolutePath() + ".zip";
+                                    try {
+                                        zipDirectory(selectedFolder, zipFileName);
+                                        System.out.println("Carpeta comprimida correctamente en: " + zipFileName);
+                                        File zip = new File(zipFileName);
+                                        
+                                        enviarArchivoLR(socket, LOCAL_FOLDER_PATH, zip);
+                                        zip.delete();
+                                        
+                                    } catch (IOException ex) {
+                                        ex.printStackTrace();
+                                    }
+                                }else{
+                                    /* Se selecciono un archivo y hay que enviarlo normal */
+                                    enviarArchivoLR(socket, LOCAL_FOLDER_PATH, jf.getSelectedFile());
                                 }
-                                
                             }
-
                             break;
-                        case 11:
+                        case 10:/*Enviar archivos desde el remoto al local */
                             
                             break;
-                        case 12:/*Enviar carpetas desde el local al remoto */
+                        case 11:/*Enviar carpetas desde el remoto al local */
                         break;
-                        case 13:/*Enviar archivos desde el remoto al local */
-                        break;
-                        case 14:/*Enviar carpetas desde el remoto al local */
-                        break;
-                        case 15:
-                            // Salir
+                        case 12:/* Salir */
                             socket.close();
                             return;
                         default:
