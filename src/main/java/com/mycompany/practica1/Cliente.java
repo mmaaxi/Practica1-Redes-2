@@ -90,7 +90,7 @@ public class Cliente {
                             /*Borrar archivo local */
                             System.out.println("\n**BORRAR ARCHIVO/CARPETA DE LA CARPETA LOCAL**\n");
                             
-                            JFileChooser jf = new JFileChooser(); // Nueva instancia
+                            /*JFileChooser jf = new JFileChooser(); // Nueva instancia
                             jf.setCurrentDirectory(new File(LOCAL_FOLDER_PATH)); // Lanzamos la ventana en el directorio de la carpeta local
                             jf.setDialogTitle("Seleccionar archivo/carpeta a borrar"); // Titulo de la ventana
                             jf.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES); // Habilitamos la seleccion de archivos y carpetas
@@ -105,6 +105,21 @@ public class Cliente {
                                 }else{
                                     System.out.println("El archivo/carpeta no existe: " + jf.getSelectedFile().getAbsolutePath());
                                 }
+                                
+                            }*/
+                            
+                            Metodos.mostrarCarpeta(LOCAL_FOLDER_PATH,0);
+                            System.out.print("Introduce el nombre del archivo/carpeta a borrar: ");
+                            String archivoBorrarLocal = scanner.next();
+                            File A = new File(LOCAL_FOLDER_PATH+File.separator+archivoBorrarLocal);
+
+                            Integer respuesta = Metodos.borrarArchivoCarpetaRemota(A);
+                            if (respuesta == 1) {
+                                System.out.println("Se borró el archivo/carpeta.");
+                            } else if (respuesta == -1) {
+                                System.out.println("El archivo/carpeta no existe.");
+                            } else if (respuesta == 0) {
+                                System.out.println("No se pudo borrar el archivo/carpeta.");
                             }
                             break;
                         case 6:
